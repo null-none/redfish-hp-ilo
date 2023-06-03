@@ -97,3 +97,62 @@ class Standard:
         bios_uri = systems_members_response.obj["Bios"]["@odata.id"]
         bios_data = self.REDFISH_OBJ.get(bios_uri)
         return self.response.render(systems_members_response, bios_data.dict)
+
+    def find_mac_address(self):
+        ethernet_data = {}
+        managers_uri = self.REDFISH_OBJ.root.obj["Managers"]["@odata.id"]
+        managers_response = self.REDFISH_OBJ.get(managers_uri)
+        managers_members_uri = next(iter(managers_response.obj["Members"]))["@odata.id"]
+        managers_members_response = self.REDFISH_OBJ.get(managers_members_uri)
+        manager_ethernet_interfaces = managers_members_response.obj[
+            "EthernetInterfaces"
+        ]["@odata.id"]
+        manager_ethernet_interfaces_response = self.REDFISH_OBJ.get(
+            manager_ethernet_interfaces
+        )
+        manager_ethernet_interfaces_members = manager_ethernet_interfaces_response.obj[
+            "Members"
+        ]
+        for member in manager_ethernet_interfaces_members:
+            ethernet_data[_member["@member.id"]] = self.REDFISH_OBJ.get(
+                _member["@odata.id"]
+            ).obj
+
+        for iface in ethernet_data:
+            return self.response.render(
+                manager_ethernet_interfaces_response,
+                ethernet_data[iface].get("MACAddress"),
+            )
+        return None
+
+    def computer_details(self):
+        systems_response = self.REDFISH_OBJ.get(
+            self.REDFISH_OBJ.root.obj["Systems"]["@odata.id"]
+        )
+        systems_members_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
+        systems_members_response = self.REDFISH_OBJ.get(systems_members_uri)
+        return self.response.render(
+            systems_members_response, systems_members_response.dict
+        )
+
+    def change_temporary_boot_order(self, boottarget):
+        systems_uri = self.REDFISH_OBJ.root.obj["Systems"]["@odata.id"]
+        systems_response = self.REDFISH_OBJ.get(systems_uri)
+        systems_members_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
+        systems_members_response = self.REDFISH_OBJ.get(systems_members_uri)
+        body = {"Boot": {"BootSourceOverrideTarget": boottarget}}
+        response = self.REDFISH_OBJ.patch(systems_members_uri, body)
+        if response.status == 400:
+            try:
+                return self.response.render(
+                    response, response.obj["error"]["@Message.ExtendedInfo"]
+                )
+            except Exception as e:
+                return self.response.render(response, str(e))
+        elif response.status != 200:
+            return self.response.render(
+                response,
+                "An http response of '{}' was returned.".format(response.status),
+            )
+        else:
+            return self.response.render(response, response.dict)
