@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="redfish_hp_ilo",
-    version="0.0.1",
+    version="0.0.2",
     description="Redfish API implementation on HPE servers with iLO RESTful API,",
     keywords="python, hp ilo, rest api, hp, ipmi",
     author="Kalinin Dmitry <kalinin.mitko@gmail.com>",
