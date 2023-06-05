@@ -8,20 +8,20 @@ class G9:
         response = self.REDFISH_OBJ.post(system_path, body)
         if response.status == 400:
             try:
-                return self.response.render(
+                return self.response.result(
                     response, response.obj["error"]["@Message.ExtendedInfo"]
                 )
             except Exception as e:
-                return self.response.render(response, str(e))
+                return self.response.result(response, str(e))
         elif response.status != 200:
-            return self.response.render(
+            return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
             )
         else:
-            return self.response.render(response, response.dict)
+            return self.response.result(response, response.dict)
 
     def get_bios_setting_gen9(self):
         bios_uri = "/redfish/v1/systems/1/bios"
         response = self.REDFISH_OBJ.get(bios_uri)
-        return self.response.render(response, response.dict)
+        return self.response.result(response, response.dict)
