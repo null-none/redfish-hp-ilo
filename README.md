@@ -11,7 +11,7 @@ pip install redfish-hp-ilo
 ```python
 from redfish_hp_ilo.api import RedfishHPIlo
 
-handler = RedfishHPIlo()
+handler = RedfishHPIlo("0.0.0.0", "username", "password")
 handler.software_firmware_inventory("firmware")
 handler.software_firmware_inventory("software")
 handler.get_bios_setting()
