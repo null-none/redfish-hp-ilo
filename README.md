@@ -21,7 +21,7 @@ handler.power_up()
 handler.find_mac_address()
 handler.computer_details()
 handler.change_temporary_boot_order("hdd")
-hadler.bios_revert_default()
+handler.bios_revert_default()
 
 
 handler.reset_server_gen9()
