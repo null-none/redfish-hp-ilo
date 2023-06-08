@@ -1,5 +1,4 @@
 class Standard:
-
     def software_firmware_inventory(self, select="firmware"):
         result = []
         update_service_uri = self.REDFISH_OBJ.root["UpdateService"]["@odata.id"]
@@ -24,8 +23,7 @@ class Standard:
                 )
             return self.response.result(response, result)
 
-
-    def cold_boot_server(self):
+    def force_restart(self):
         systems_uri = self.REDFISH_OBJ.root["Systems"]["@odata.id"]
         systems_response = self.REDFISH_OBJ.get(systems_uri)
         systems_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
@@ -36,7 +34,7 @@ class Standard:
         body = dict()
         body["Action"] = "ComputerSystem.Reset"
         body["ResetType"] = "ForceRestart"
-        response = self.REDFISH_OBJ.post(system_reboot_uri, body)
+        response = self.REDFISH_OBJ.post(path=system_reboot_uri, body=body)
         if response.status == 400:
             try:
                 return self.response.result(
@@ -52,6 +50,32 @@ class Standard:
         else:
             return self.response.result(response, response.dict)
 
+    def power_cycle(self):
+        systems_uri = self.REDFISH_OBJ.root["Systems"]["@odata.id"]
+        systems_response = self.REDFISH_OBJ.get(systems_uri)
+        systems_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
+        systems_response = self.REDFISH_OBJ.get(systems_uri)
+        system_reboot_uri = systems_response.obj["Actions"]["#ComputerSystem.Reset"][
+            "target"
+        ]
+        body = dict()
+        body["Action"] = "ComputerSystem.Reset"
+        body["ResetType"] = "PowerCycle"
+        response = self.REDFISH_OBJ.post(path=system_reboot_uri, body=body)
+        if response.status == 400:
+            try:
+                return self.response.result(
+                    response, response.obj["error"]["@Message.ExtendedInfo"]
+                )
+            except Exception as e:
+                return self.response.result(response, str(e))
+        elif response.status != 200:
+            return self.response.result(
+                response,
+                "An http response of '{}' was returned.".format(response.status),
+            )
+        else:
+            return self.response.result(response, response.dict)
 
     def reset_server(self):
         systems_uri = self.REDFISH_OBJ.root["Systems"]["@odata.id"]
@@ -64,7 +88,7 @@ class Standard:
         body = dict()
         body["Action"] = "ComputerSystem.Reset"
         body["ResetType"] = "GracefulRestart"
-        response = self.REDFISH_OBJ.post(system_reboot_uri, body)
+        response = self.REDFISH_OBJ.post(path=system_reboot_uri, body=body)
         if response.status == 400:
             try:
                 return self.response.result(
@@ -91,7 +115,7 @@ class Standard:
         body = dict()
         body["Action"] = "ComputerSystem.Reset"
         body["ResetType"] = "ForceOff"
-        response = self.REDFISH_OBJ.post(system_reboot_uri, body)
+        response = self.REDFISH_OBJ.post(path=system_reboot_uri, body=body)
         if response.status == 400:
             try:
                 return self.response.result(
@@ -117,8 +141,8 @@ class Standard:
         ]
         body = dict()
         body["Action"] = "ComputerSystem.Reset"
-        body["ResetType"] = "On"
-        response = self.REDFISH_OBJ.post(system_reboot_uri, body)
+        body["ResetType"] = "ForceOn"
+        response = self.REDFISH_OBJ.post(path=system_reboot_uri, body=body)
         if response.status == 400:
             try:
                 return self.response.result(
@@ -185,8 +209,14 @@ class Standard:
         systems_response = self.REDFISH_OBJ.get(systems_uri)
         systems_members_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
         systems_members_response = self.REDFISH_OBJ.get(systems_members_uri)
-        body = {"Boot": {"BootSourceOverrideTarget": boottarget}}
-        response = self.REDFISH_OBJ.patch(systems_members_uri, body)
+        body = {
+            "Boot": {
+                "BootSourceOverrideTarget": boottarget,
+                "BootSourceOverrideEnabled": "Once",
+                "BootSourceOverrideMode": "UEFI",
+            }
+        }
+        response = self.REDFISH_OBJ.patch(path=systems_members_uri, body=body)
         if response.status == 400:
             try:
                 return self.response.result(
@@ -213,7 +243,32 @@ class Standard:
             "target"
         ]
         body = {"Action": "Bios.ResetBios", "ResetType": "default"}
-        response = self.REDFISH_OBJ.post(bios_reset_action_uri, body)
+        response = self.REDFISH_OBJ.post(path=bios_reset_action_uri, body=body)
+        if response.status == 400:
+            try:
+                return self.response.result(
+                    response, response.obj["error"]["@Message.ExtendedInfo"]
+                )
+            except Exception as e:
+                return self.response.result(response, str(e))
+        elif response.status != 200:
+            return self.response.result(
+                response,
+                "An http response of '{}' was returned.".format(response.status),
+            )
+        else:
+            return self.response.result(response, response.dict)
+
+    def reset_ilo(self):
+        managers_uri = self.REDFISH_OBJ.root.obj["Managers"]["@odata.id"]
+        managers_response = self.REDFISH_OBJ.get(managers_uri)
+        managers_members_uri = next(iter(managers_response.obj["Members"]))["@odata.id"]
+        managers_members_response = self.REDFISH_OBJ.get(managers_members_uri)
+        reset_ilo_uri = managers_members_response.obj["Actions"]["#Manager.Reset"][
+            "target"
+        ]
+        body = {"Action": "Manager.Reset"}
+        response = self.REDFISH_OBJ.post(reset_ilo_uri, body)
         if response.status == 400:
             try:
                 return self.response.result(
