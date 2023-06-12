@@ -42,7 +42,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -69,7 +69,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -96,7 +96,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -123,7 +123,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -150,7 +150,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -204,7 +204,7 @@ class Standard:
             systems_members_response, systems_members_response.dict
         )
 
-    def change_temporary_boot_order(self, boottarget):
+    def change_temporary_boot_order(self, boottarget, enable="Once", mode="UEFI"):
         systems_uri = self.REDFISH_OBJ.root["Systems"]["@odata.id"]
         systems_response = self.REDFISH_OBJ.get(systems_uri)
         systems_members_uri = next(iter(systems_response.obj["Members"]))["@odata.id"]
@@ -212,8 +212,8 @@ class Standard:
         body = {
             "Boot": {
                 "BootSourceOverrideTarget": boottarget,
-                "BootSourceOverrideEnabled": "Once",
-                "BootSourceOverrideMode": "UEFI",
+                "BootSourceOverrideEnabled": enable,
+                "BootSourceOverrideMode": mode,
             }
         }
         response = self.REDFISH_OBJ.patch(path=systems_members_uri, body=body)
@@ -224,7 +224,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -251,7 +251,7 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
@@ -276,7 +276,31 @@ class Standard:
                 )
             except Exception as e:
                 return self.response.result(response, str(e))
-        elif response.status != 200:
+        elif response.status < 200 or response.status > 300:
+            return self.response.result(
+                response,
+                "An http response of '{}' was returned.".format(response.status),
+            )
+        else:
+            return self.response.result(response, response.dict)
+
+
+    def set_boot_mode(self, mode="Uefi"): # LegacyBios
+        bios_uri = "/redfish/v1/systems/1/bios/settings"
+        body = {
+            "Attributes": {
+                "BootMode": mode
+            }
+        }
+        response = self.REDFISH_OBJ.patch(path=bios_uri, body=body)
+        if response.status == 400:
+            try:
+                return self.response.result(
+                    response, response.obj["error"]["@Message.ExtendedInfo"]
+                )
+            except Exception as e:
+                return self.response.result(response, str(e))
+        elif response.status < 200 or response.status > 300:
             return self.response.result(
                 response,
                 "An http response of '{}' was returned.".format(response.status),
