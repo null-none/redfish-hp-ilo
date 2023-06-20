@@ -3,7 +3,8 @@ from setuptools import setup
 setup(
     name="redfish_hp_ilo",
     version="0.1.0",
-    description="Redfish API implementation on HPE servers with iLO RESTful API,",
+    description="Redfish API for HP iLO.",
+    long_description="Redfish API implementation on HPE servers with iLO RESTful API.",
     keywords="python, hp ilo, rest api, hp, ipmi",
     author="Kalinin Dmitry <kalinin.mitko@gmail.com>",
     url="https://github.com/null-none/redfish-hp-ilo",
